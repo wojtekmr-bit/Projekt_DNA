@@ -55,38 +55,24 @@ const string LISTA_AMINOKWASOW[LICZBA_AMINOKWASOW] = {
     "Walina", "Alanina", "Kwas asparaginowy", "Kwas glutaminowy", "Glicyna"
 };
 
-vector<string> WczytajPlik(string sciezka)
+string WczytajPlik(string sciezka)
 {
-    vector<string> linie;
+    string dna = "";
     ifstream plik(sciezka);
 
     if (!plik.is_open())
     {
         cerr << "Nie mozna otworzyc pliku: " << sciezka << endl;
-        return linie;
+        return dna;
     }
 
     string linia;
 
     while (getline(plik, linia))
     {
-        linie.push_back(linia);
-    }
-
-    plik.close();
-
-    return linie;
-}
-
-string PolaczLinieDNA(vector<string> linie)
-{
-    string dna = "";
-
-    for (int i = 0; i < linie.size(); i++)
-    {
-        for (int j = 0; j < linie[i].length(); j++)
+        for (int i = 0; i < linia.length(); i++)
         {
-            char znak = linie[i][j];
+            char znak = linia[i];
 
             if (znak == 'a') znak = 'A';
             if (znak == 't') znak = 'T';
@@ -99,6 +85,8 @@ string PolaczLinieDNA(vector<string> linie)
             }
         }
     }
+
+    plik.close();
 
     return dna;
 }
@@ -145,27 +133,20 @@ string KodonNaAminokwas(string kodon)
     return "NIEZNANY";
 }
 
-vector<WynikORF> AnalizujMRNA(string mrna)
+int AnalizujMRNA(string mrna, WynikORF wyniki[])
 {
-    vector<WynikORF> wyniki;
-
+    int liczbaWynikow = 0;
     int numer = 1;
     int i = 0;
     int dlugosc = mrna.length();
 
-    while (i <= dlugosc - 3)
+    while (i <= dlugosc - 3 && liczbaWynikow < MAKS_ORF)
     {
         string kodon = mrna.substr(i, 3);
 
         if (CzyStart(kodon))
         {
-            WynikORF wynik;
-
-            wynik.numer = numer;
-            wynik.pozycjaStart = i;
-            wynik.pozycjaStop = -1;
-
-            bool znalezionoStop = false;
+            int pozycjaStop = -1;
 
             for (int j = i; j <= dlugosc - 3; j = j + 3)
             {
@@ -173,25 +154,22 @@ vector<WynikORF> AnalizujMRNA(string mrna)
 
                 if (CzyStop(kodonAktualny))
                 {
-                    wynik.pozycjaStop = j;
-                    znalezionoStop = true;
+                    pozycjaStop = j;
                     break;
-                }
-
-                string aminokwas = KodonNaAminokwas(kodonAktualny);
-
-                if (aminokwas != "NIEZNANY")
-                {
-                    wynik.aminokwasy.push_back(aminokwas);
                 }
             }
 
-            if (znalezionoStop)
+            if (pozycjaStop != -1)
             {
-                wyniki.push_back(wynik);
+                wyniki[liczbaWynikow].numer = numer;
+                wyniki[liczbaWynikow].pozycjaStart = i;
+                wyniki[liczbaWynikow].pozycjaStop = pozycjaStop;
+                wyniki[liczbaWynikow].liczbaAminokwasow = (pozycjaStop - i) / 3;
+
+                liczbaWynikow++;
                 numer++;
 
-                i = wynik.pozycjaStop + 3;
+                i = pozycjaStop + 3;
             }
             else
             {
@@ -204,10 +182,10 @@ vector<WynikORF> AnalizujMRNA(string mrna)
         }
     }
 
-    return wyniki;
+    return liczbaWynikow;
 }
 
-void WypiszWyniki(string dna, string mrna, vector<WynikORF> wyniki)
+void WypiszWyniki(string dna, string mrna, WynikORF wyniki[], int liczbaWynikow)
 {
     cout << "===== WYNIK ANALIZY DNA =====" << endl;
     cout << "Dlugosc DNA: " << dna.length() << endl;
@@ -215,7 +193,7 @@ void WypiszWyniki(string dna, string mrna, vector<WynikORF> wyniki)
     cout << "mRNA: " << mrna << endl;
     cout << endl;
 
-    if (wyniki.size() == 0)
+    if (liczbaWynikow == 0)
     {
         cout << "Nie znaleziono kompletnej sekwencji START-STOP." << endl;
         return;
@@ -223,30 +201,34 @@ void WypiszWyniki(string dna, string mrna, vector<WynikORF> wyniki)
 
     int ilosci[LICZBA_AMINOKWASOW] = { 0 };
 
-    cout << "Znalezione sekwencje START-STOP: " << wyniki.size() << endl;
+    cout << "Znalezione sekwencje START-STOP: " << liczbaWynikow << endl;
     cout << "Pozycje sa liczone od 0 w sekwencji mRNA." << endl;
     cout << endl;
 
-    for (int i = 0; i < wyniki.size(); i++)
+    for (int i = 0; i < liczbaWynikow; i++)
     {
         cout << "ORF " << wyniki[i].numer << endl;
         cout << "START: " << wyniki[i].pozycjaStart << endl;
         cout << "STOP:  " << wyniki[i].pozycjaStop << endl;
+        cout << "Dlugosc sekwencji aminokwasow: " << wyniki[i].liczbaAminokwasow << endl;
 
         cout << "Aminokwasy: ";
 
-        for (int j = 0; j < wyniki[i].aminokwasy.size(); j++)
+        for (int j = wyniki[i].pozycjaStart; j < wyniki[i].pozycjaStop; j = j + 3)
         {
-            cout << wyniki[i].aminokwasy[j];
+            string kodon = mrna.substr(j, 3);
+            string aminokwas = KodonNaAminokwas(kodon);
 
-            if (j < wyniki[i].aminokwasy.size() - 1)
+            cout << aminokwas;
+
+            if (j + 3 < wyniki[i].pozycjaStop)
             {
                 cout << ", ";
             }
 
             for (int k = 0; k < LICZBA_AMINOKWASOW; k++)
             {
-                if (wyniki[i].aminokwasy[j] == LISTA_AMINOKWASOW[k])
+                if (aminokwas == LISTA_AMINOKWASOW[k])
                 {
                     ilosci[k]++;
                 }

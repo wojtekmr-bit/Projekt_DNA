@@ -1,22 +1,21 @@
 #pragma once
 #include <string>
-#include <vector>
 
 using namespace std;
 
 const int LICZBA_KODONOW = 64;
 const int LICZBA_AMINOKWASOW = 20;
+const int MAKS_ORF = 5000;
 
 struct WynikORF
 {
     int numer;
     int pozycjaStart;
     int pozycjaStop;
-    vector<string> aminokwasy;
+    int liczbaAminokwasow;
 };
 
-vector<string> WczytajPlik(string sciezka);
-string PolaczLinieDNA(vector<string> linie);
+string WczytajPlik(string sciezka);
 string DNAnaMRNA(string dna);
 
 bool CzyStart(string kodon);
@@ -24,6 +23,6 @@ bool CzyStop(string kodon);
 
 string KodonNaAminokwas(string kodon);
 
-vector<WynikORF> AnalizujMRNA(string mrna);
+int AnalizujMRNA(string mrna, WynikORF wyniki[]);
 
-void WypiszWyniki(string dna, string mrna, vector<WynikORF> wyniki);
+void WypiszWyniki(string dna, string mrna, WynikORF wyniki[], int liczbaWynikow);
