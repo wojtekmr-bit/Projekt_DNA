@@ -187,7 +187,7 @@ int AnalizujMRNA(string mrna, WynikORF wyniki[])
 
 void WypiszWyniki(string dna, string mrna, WynikORF wyniki[], int liczbaWynikow)
 {
-    cout << "===== WYNIK ANALIZY DNA =====" << endl;
+    cout << "    Wynik analizy DNA  " << endl;
     cout << "Dlugosc DNA: " << dna.length() << endl;
     cout << "DNA:  " << dna << endl;
     cout << "mRNA: " << mrna << endl;
@@ -239,7 +239,7 @@ void WypiszWyniki(string dna, string mrna, WynikORF wyniki[], int liczbaWynikow)
         cout << endl;
     }
 
-    cout << "===== LISTA WYKRYTYCH AMINOKWASOW I ICH ILOSC =====" << endl;
+    cout << "   Wykryte aminokwasy i ich ilosc " << endl;
 
     for (int i = 0; i < LICZBA_AMINOKWASOW; i++)
     {
